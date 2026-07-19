@@ -5,12 +5,16 @@ import (
 	"fmt"
 )
 
-type Headers map[string]string
+type Headers struct {
+	headers map[string]string
+}
 
 var rn = []byte("\r\n")
 
-func NewHeaders() Headers {
-	return make(Headers)
+func NewHeaders() *Headers {
+	return &Headers{
+		headers: map[string]string{},
+	}
 }
 
 func parseHeader(fieldLane []byte) (string, string, error) {
@@ -29,7 +33,7 @@ func parseHeader(fieldLane []byte) (string, string, error) {
 	return string(name), string(value), nil
 }
 
-func (h Headers) Parse(data []byte) (int, bool, error) {
+func (h *Headers) Parse(data []byte) (int, bool, error) {
 	idx := bytes.Index(data, rn)
 	if idx == -1 {
 		return 0, false, nil
