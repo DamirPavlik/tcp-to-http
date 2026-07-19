@@ -6,6 +6,28 @@ import (
 	"strings"
 )
 
+func isToken(str []byte) bool {
+	for _, ch := range str {
+		found := false
+		if ch >= 'A' && ch <= 'Z' || ch >= 'a' && ch <= 'z' || ch >= '0' && ch <= '9' {
+			found = true
+		}
+		switch ch {
+		case '!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~':
+			found = true
+		}
+
+		if !found {
+			return false
+		}
+	}
+	return true
+	// Uppercase letters: A-Z
+	// Lowercase letters: a-z
+	// Digits: 0-9
+	// Special characters: !, #, $, %, &, ', *, +, -, ., ^, _, `, |, ~
+}
+
 type Headers struct {
 	headers map[string]string
 }
@@ -55,6 +77,10 @@ func (h *Headers) Parse(data []byte) (int, bool, error) {
 	name, value, err := parseHeader(data[:idx])
 	if err != nil {
 		return 0, false, err
+	}
+
+	if !isToken([]byte(name)) {
+		return 0, false, fmt.Errorf("err: header name")
 	}
 
 	h.Set(name, value)
