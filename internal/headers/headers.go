@@ -3,6 +3,7 @@ package headers
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type Headers struct {
@@ -33,6 +34,14 @@ func parseHeader(fieldLane []byte) (string, string, error) {
 	return string(name), string(value), nil
 }
 
+func (h *Headers) Get(name string) string {
+	return h.headers[strings.ToLower(name)]
+}
+
+func (h *Headers) Set(name, value string) {
+	h.headers[strings.ToLower(name)] = value
+}
+
 func (h *Headers) Parse(data []byte) (int, bool, error) {
 	idx := bytes.Index(data, rn)
 	if idx == -1 {
@@ -47,7 +56,8 @@ func (h *Headers) Parse(data []byte) (int, bool, error) {
 	if err != nil {
 		return 0, false, err
 	}
-	h[name] = value
+
+	h.Set(name, value)
 
 	return idx + len(rn), false, nil
 }
