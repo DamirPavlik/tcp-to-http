@@ -61,29 +61,39 @@ func (h *Headers) Get(name string) string {
 }
 
 func (h *Headers) Set(name, value string) {
-	h.headers[strings.ToLower(name)] = value
+	name = strings.ToLower(name)
+
+	if v, ok := h.headers[name]; ok {
+		h.headers[name] = fmt.Sprintf("%s,%s", v, value)
+	} else {
+		h.headers[name] = value
+	}
 }
 
 func (h *Headers) Parse(data []byte) (int, bool, error) {
-	idx := bytes.Index(data, rn)
-	if idx == -1 {
-		return 0, false, nil
+	total := 0
+
+	for {
+		idx := bytes.Index(data[total:], rn)
+		if idx == -1 {
+			return total, false, nil
+		}
+
+		if idx == 0 {
+			return total + len(rn), true, nil
+		}
+
+		name, value, err := parseHeader(data[total : total+idx])
+		if err != nil {
+			return 0, false, err
+		}
+
+		if !isToken([]byte(name)) {
+			return 0, false, fmt.Errorf("err: header name")
+		}
+
+		h.Set(name, value)
+
+		total += idx + len(rn)
 	}
-
-	if idx == 0 {
-		return len(rn), true, nil
-	}
-
-	name, value, err := parseHeader(data[:idx])
-	if err != nil {
-		return 0, false, err
-	}
-
-	if !isToken([]byte(name)) {
-		return 0, false, fmt.Errorf("err: header name")
-	}
-
-	h.Set(name, value)
-
-	return idx + len(rn), false, nil
 }
